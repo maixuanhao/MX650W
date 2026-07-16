@@ -63,9 +63,9 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
-    - name: SSH connection to Actions (Dừng ở đây để cấu hình)
-      uses: P3TERX/ssh2actions@main
-      if: true
+    - name: Setup tmate session (Bắt buộc dừng ở đây để lấy link SSH)
+      uses: mxschmitt/action-tmate@v3
+      if: always()
 
     - name: Compile the firmware
       id: compile
