@@ -158,3 +158,5 @@ jobs:
         delete_tags: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+     - name: SSH connection to Actions
+      uses: P3TERX/ssh2actions@main
