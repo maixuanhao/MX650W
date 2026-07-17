@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# 1. Cấu hình đèn LED Trắng (white:status) tự động sáng khi khởi động
+uci add system led
+uci set system.@led[-1].name='Status LED'
+uci set system.@led[-1].sysfs='white:status'
+uci set system.@led[-1].trigger='default-on'
+uci commit system
+
+# 2. Cấu hình giao diện mặc định là Argon
+uci set luci.main.mediaurlbase='/luci-static/argon'
+uci commit luci
+
+# 3. Cấu hình ngôn ngữ mặc định là Tiếng Việt
+uci set luci.main.lang='vi'
+uci commit luci
+
+exit 0
