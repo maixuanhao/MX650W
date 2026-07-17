@@ -4,19 +4,12 @@
 # File name: diy-part2.sh
 # Description: OpenWrt DIY script part 2 (After Update feeds)
 #
-# Copyright (c) 2019-2024 P3TERX <https://p3terx.com>
-#
-# This is free software, licensed under the MIT License.
-# See /LICENSE for more information.
-#
 
-# Modify default IP
-#sed -i 's/192.168.1.1/192.168.50.5/g' package/base-files/files/bin/config_generate
+# 1. Đổi IP mặc định sang dải cấu hình Meraki (192.168.65.1)
+sed -i 's/192.168.1.1/192.168.65.1/g' package/base-files/files/bin/config_generate
 
-# Modify default theme
-#sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/Makefile
+# 2. Tự động đổi tên router thành Meraki-MX65W
+sed -i 's/OpenWrt/Meraki-MX65W/g' package/base-files/files/bin/config_generate
 
-# Modify hostname
-#sed -i 's/OpenWrt/P3TERX-Router/g' package/base-files/files/bin/config_generate
-# Ép hệ thống dừng lại và mở cổng SSH để cấu hình menuconfig
-touch debug
+# 3. Tự động đổi giao diện mặc định sang Argon (Giao diện rất đẹp của ImmortalWrt)
+sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/Makefile
