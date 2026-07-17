@@ -1,18 +1,28 @@
 #!/bin/sh
 
-# 1. Cấu hình đèn LED Trắng (white:status) tự động sáng khi khởi động
+# 1. Thay đổi địa chỉ IP LAN mặc định thành 192.168.10.1
+uci set network.lan.ipaddr='192.168.10.1'
+uci commit network
+
+# 2. Cấu hình đèn LED Trắng (white:status) tự động sáng khi khởi động
 uci add system led
 uci set system.@led[-1].name='Status LED'
 uci set system.@led[-1].sysfs='white:status'
 uci set system.@led[-1].trigger='default-on'
 uci commit system
 
-# 2. Cấu hình giao diện mặc định là Argon
+# 3. Cấu hình giao diện mặc định là Argon
 uci set luci.main.mediaurlbase='/luci-static/argon'
 uci commit luci
 
-# 3. Cấu hình ngôn ngữ mặc định là Tiếng Việt
+# 4. Cấu hình ngôn ngữ mặc định là Tiếng Việt
 uci set luci.main.lang='vi'
 uci commit luci
+
+# 5. Kích hoạt dịch vụ AdGuard Home tự chạy khi khởi động lần đầu
+if [ -f "/etc/init.d/adguardhome" ]; then
+    /etc/init.d/adguardhome enable
+    /etc/init.d/adguardhome start
+fi
 
 exit 0
