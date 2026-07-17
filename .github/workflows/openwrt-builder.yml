@@ -43,6 +43,17 @@ jobs:
         git clone $REPO_URL -b $REPO_BRANCH openwrt
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
+    - name: Cache target Toolchain & Packages
+      uses: actions/cache@v3
+      with:
+        path: |
+          openwrt/dl
+          openwrt/staging_dir/host
+          openwrt/staging_dir/toolchain-*
+        key: ${{ runner.os }}-openwrt-cache-${{ hashFiles('openwrt/.config') }}
+        restore-keys: |
+          ${{ runner.os }}-openwrt-cache-
+
     - name: Load custom feeds
       run: |
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
@@ -65,7 +76,6 @@ jobs:
 
     - name: Setup tmate session (Bắt buộc dừng ở đây để lấy link SSH)
       uses: mxschmitt/action-tmate@v3
-      if: always()
 
     - name: Compile the firmware
       id: compile
