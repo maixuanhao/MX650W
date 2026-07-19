@@ -88,6 +88,11 @@ echo 'CONFIG_PACKAGE_luci-app-samba4=y' >> .config
 echo 'CONFIG_PACKAGE_luci-app-ksmbd=y' >> .config
 echo 'CONFIG_PACKAGE_luci-app-aria2=y' >> .config
 echo 'CONFIG_PACKAGE_luci-app-hd-idle=y' >> .config
+# Thêm các gói bổ trợ vào cấu hình trước khi build
+sed -i '$a CONFIG_PACKAGE_luci-app-firewall=y' .config
+sed -i '$a CONFIG_PACKAGE_luci-app-statistics=y' .config
+sed -i '$a CONFIG_PACKAGE_luci-app-ledtrig-netdev=y' .config
+sed -i '$a CONFIG_PACKAGE_luci-app-attendedsysupgrade=y' .config
 echo 'CONFIG_PACKAGE_luci-app-minidlna=y' >> .config
 
 # Thay đổi IP mặc định sang 192.168.10.1
