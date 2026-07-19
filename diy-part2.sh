@@ -3,12 +3,12 @@
 # Description: OpenWrt DIY script part 2 (After Update feeds)
 
 # =================================================================
-# 0. CẤU HÌNH TỰ ĐỘNG ĐÈN LED TOÀN BỘ CỔNG MẠNG (MẶT TRƯỚC VÀ SAU)
+# 0. CẤU HÌNH ĐÈN LED TÍN HIỆU CHO CISCO MERAKI MX65W
 # =================================================================
 mkdir -p files/etc/uci-defaults
 cat << 'EOF' > files/etc/uci-defaults/99-custom-leds
 #!/bin/sh
-# Đèn Nguồn mặc định sáng xanh
+# Đèn Nguồn mặc định sáng ổn định
 LED_POWER=$(ls /sys/class/leds/ | grep -E "blue|green" | head -n 1)
 if [ -n "$LED_POWER" ]; then
     uci -q delete system.led_power
@@ -18,14 +18,14 @@ if [ -n "$LED_POWER" ]; then
     uci set system.led_power.trigger='default-on'
 fi
 
-# Tự động cấu hình nháy led cho tất cả các cổng mạng phát hiện được
-for led in $(ls /sys/class/leds/ | grep -E "lan|wan|port|link"); do
+# Tự động map tín hiệu mạng (netdev) vào toàn bộ bóng LED LAN/WAN trước và sau máy
+for led in $(ls /sys/class/leds/ | grep -E "lan|wan|port|link|speed"); do
     uci -q delete system.led_$led
     uci set system.led_$led=led
-    uci set system.led_$led.name="LED $led"
+    uci set system.led_$led.name="LED_$led"
     uci set system.led_$led.sysfs="$led"
     uci set system.led_$led.trigger='netdev'
-    uci set system.led_$led.dev='eth0' # Trỏ về switch trunk gốc
+    uci set system.led_$led.dev='eth0'
     uci set system.led_$led.mode='link tx rx'
 done
 
@@ -82,7 +82,7 @@ echo 'CONFIG_PACKAGE_luci-i18n-passwall-vi=y' >> .config
 echo 'CONFIG_PACKAGE_luci-app-tailscale=y' >> .config
 
 # =================================================================
-# 6. LƯU TRỮ NAS & ĐA PHƯƠNG TIỆN (Flash 1GB)
+# 6. LƯU TRỮ NAS & ĐA PHƯƠNG TIỆN
 # =================================================================
 echo 'CONFIG_PACKAGE_luci-app-samba4=y' >> .config
 echo 'CONFIG_PACKAGE_luci-app-ksmbd=y' >> .config
