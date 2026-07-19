@@ -67,55 +67,59 @@ jobs:
     - name: Install feeds
       run: cd openwrt && ./scripts/feeds install -a
 
-    - name: Load custom configuration
-      run: |
-        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
-        chmod +x $DIY_P2_SH
-        cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P2_SH
-
-    - name: Setup custom files (Cấu hình Led, Argon & Tiếng Việt gốc)
-      run: |
-        if [ -d "files" ]; then
-          mv files openwrt/files
-          echo "Đã di chuyển thư mục cấu hình files vào bộ build thành công!"
-        else
-          echo "Không tìm thấy thư mục files trong mã nguồn!"
-        fi
-
-    # BƯỚC ĐÃ ĐƯỢC FIX: Nạp cấu hình cứng MX65W và App TRƯỚC khi dừng SSH/Biên dịch
-    - name: Inject Meraki MX65W Hardware and Custom Apps Configurations
+    - name: Inject Meraki MX65W Hardware Base
       run: |
         cd openwrt
         rm -f .config
         
-        # Khóa cứng phần cứng Meraki MX65W chip Qualcomm IPQ806x
+        # 1. Khóa cứng kiến trúc phần cứng Meraki MX65W (IPQ806x)
         echo "CONFIG_TARGET_ipq806x=y" > .config
         echo "CONFIG_TARGET_ipq806x_generic=y" >> .config
         echo "CONFIG_TARGET_ipq806x_generic_DEVICE_meraki_mx65w=y" >> .config
         
-        # Tích hợp Giao diện đẹp Argon & Tiếng Việt
-        echo "CONFIG_PACKAGE_luci-theme-argon=y" >> .config
-        echo "CONFIG_PACKAGE_luci-app-argon-config=y" >> .config
-        echo "CONFIG_PACKAGE_luci-i18n-vietnamese=y" >> .config
-        echo "CONFIG_PACKAGE_uhttpd=y" >> .config
+        # 2. Fix lỗi boot tịt nhân (Division by 0) - Ép driver gốc Non-CT
+        echo "CONFIG_PACKAGE_kmod-ath10k=y" >> .config
+        echo "CONFIG_PACKAGE_ath10k-firmware-qca9984=y" >> .config
+        echo "# CONFIG_PACKAGE_kmod-ath10k-ct is not set" >> .config
+        echo "# CONFIG_PACKAGE_ath10k-firmware-qca9984-ct is not set" >> .config
         
-        # Tích hợp Đồ chơi: Cân bằng tải gộp mạng (mwan3), Passwall, AdguardHome
-        echo "CONFIG_PACKAGE_luci-app-mwan3=y" >> .config
-        echo "CONFIG_PACKAGE_luci-app-passwall=y" >> .config
-        echo "CONFIG_PACKAGE_luci-app-adguardhome=y" >> .config
-        echo "CONFIG_PACKAGE_luci-app-ttyd=y" >> .config
-        echo "CONFIG_PACKAGE_luci-app-ddns=y" >> .config
-        echo "CONFIG_PACKAGE_luci-app-upnp=y" >> .config
-        echo "CONFIG_PACKAGE_luci-app-wol=y" >> .config
-        echo "CONFIG_PACKAGE_luci-app-zerotier=y" >> .config
-        echo "CONFIG_PACKAGE_luci-app-wireguard=y" >> .config
+        # 3. Định dạng nén GZIP cho U-Boot Meraki
+        echo "CONFIG_TARGET_ROOTFS_SQUASHFS=y" >> .config
+        echo "CONFIG_TARGET_KERNEL_COMP_GZIP=y" >> .config
+
+        # 4. Kích hoạt driver điều khiển 12 cổng mạng (DSA Switch)
+        echo "CONFIG_PACKAGE_kmod-dsa-core=y" >> .config
+        echo "CONFIG_PACKAGE_kmod-dsa-qca8k=y" >> .config
+        echo "CONFIG_PACKAGE_kmod-switch-qca83xx=y" >> .config
+        echo "CONFIG_PACKAGE_kmod-8021q=y" >> .config
+
+        # 5. Kích hoạt lõi điều khiển LED hệ thống
+        echo "CONFIG_PACKAGE_kmod-leds-gpio=y" >> .config
+        echo "CONFIG_PACKAGE_kmod-ledtrig-netdev=y" >> .config
+        echo "CONFIG_PACKAGE_kmod-ledtrig-timer=y" >> .config
+        echo "CONFIG_PACKAGE_kmod-ledtrig-default-on=y" >> .config
+        echo "CONFIG_PACKAGE_kmod-ledtrig-heartbeat=y" >> .config
+
+    - name: Load custom configuration & Apps
+      run: |
+        # Đưa cấu hình file gốc (.config nếu có) vào trước
+        [ -e $CONFIG_FILE ] && cat $CONFIG_FILE >> openwrt/.config
+        chmod +x $DIY_P2_SH
+        cd openwrt
+        # Chạy script diy-part2 để nạp đống App và xử lý LED
+        $GITHUB_WORKSPACE/$DIY_P2_SH
         
-        # Đồng bộ hóa cấu hình bắt buộc
+        # Đồng bộ hóa và cấu hình lại toàn bộ tùy chọn app
         make defconfig
 
-    # Giữ lại tmate để bạn có thể vào SSH kiểm tra hoặc tải nguồn thủ công nếu muốn
-    - name: Setup tmate session (Dừng lấy link SSH kiểm tra)
+    - name: Setup custom files
+      run: |
+        if [ -d "files" ]; then
+          mv files openwrt/files
+          echo "Đã di chuyển thư mục cấu hình files thành công!"
+        fi
+
+    - name: Setup tmate session (SSH Debug nếu cần)
       uses: mxschmitt/action-tmate@v3
 
     - name: Compile the firmware
