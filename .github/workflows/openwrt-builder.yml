@@ -1,11 +1,8 @@
-- name: Initialization environment
+- name: Install tmate
       run: |
-        # Đảm bảo cài thêm tmate ở đây cho chắc chắn
         sudo apt-get update
-        sudo apt-get install -y tmate ack antlr3 asciidoc ... (giữ nguyên danh sách cũ của bạn)
-        sudo timedatectl set-timezone "$TZ"
+        sudo apt-get install -y tmate
 
-    # --- Phần SSH ---
     - name: SSH Connection (Tạm dừng để kiểm tra)
       uses: mxschmitt/action-tmate@v3
       with:
