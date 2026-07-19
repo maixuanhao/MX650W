@@ -83,18 +83,45 @@ jobs:
           echo "Không tìm thấy thư mục files trong mã nguồn!"
         fi
 
-    - name: Setup tmate session (Bắt buộc dừng ở đây để lấy link SSH)
+    # BƯỚC ĐÃ ĐƯỢC FIX: Nạp cấu hình cứng MX65W và App TRƯỚC khi dừng SSH/Biên dịch
+    - name: Inject Meraki MX65W Hardware and Custom Apps Configurations
+      run: |
+        cd openwrt
+        rm -f .config
+        
+        # Khóa cứng phần cứng Meraki MX65W chip Qualcomm IPQ806x
+        echo "CONFIG_TARGET_ipq806x=y" > .config
+        echo "CONFIG_TARGET_ipq806x_generic=y" >> .config
+        echo "CONFIG_TARGET_ipq806x_generic_DEVICE_meraki_mx65w=y" >> .config
+        
+        # Tích hợp Giao diện đẹp Argon & Tiếng Việt
+        echo "CONFIG_PACKAGE_luci-theme-argon=y" >> .config
+        echo "CONFIG_PACKAGE_luci-app-argon-config=y" >> .config
+        echo "CONFIG_PACKAGE_luci-i18n-vietnamese=y" >> .config
+        echo "CONFIG_PACKAGE_uhttpd=y" >> .config
+        
+        # Tích hợp Đồ chơi: Cân bằng tải gộp mạng (mwan3), Passwall, AdguardHome
+        echo "CONFIG_PACKAGE_luci-app-mwan3=y" >> .config
+        echo "CONFIG_PACKAGE_luci-app-passwall=y" >> .config
+        echo "CONFIG_PACKAGE_luci-app-adguardhome=y" >> .config
+        echo "CONFIG_PACKAGE_luci-app-ttyd=y" >> .config
+        echo "CONFIG_PACKAGE_luci-app-ddns=y" >> .config
+        echo "CONFIG_PACKAGE_luci-app-upnp=y" >> .config
+        echo "CONFIG_PACKAGE_luci-app-wol=y" >> .config
+        echo "CONFIG_PACKAGE_luci-app-zerotier=y" >> .config
+        echo "CONFIG_PACKAGE_luci-app-wireguard=y" >> .config
+        
+        # Đồng bộ hóa cấu hình bắt buộc
+        make defconfig
+
+    # Giữ lại tmate để bạn có thể vào SSH kiểm tra hoặc tải nguồn thủ công nếu muốn
+    - name: Setup tmate session (Dừng lấy link SSH kiểm tra)
       uses: mxschmitt/action-tmate@v3
 
     - name: Compile the firmware
       id: compile
       run: |
         cd openwrt
-        echo "CONFIG_PACKAGE_luci-theme-argon=y" >> .config
-        echo "CONFIG_PACKAGE_luci-app-argon-config=y" >> .config
-        echo "CONFIG_PACKAGE_luci-i18n-vietnamese=y" >> .config
-        echo "CONFIG_PACKAGE_uhttpd=y" >> .config
-        echo "CONFIG_PACKAGE_luci-app-adguardhome=y" >> .config
         make -j$(nproc) || make -j1 || make -j1 V=s
         echo "status=success" >> $GITHUB_OUTPUT
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
