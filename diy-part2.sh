@@ -1,10 +1,7 @@
-- name: Load custom configuration
-      run: |
-        # Xóa file .config cũ nếu có
-        rm -f openwrt/.config
-        chmod +x $DIY_P2_SH
-        cd openwrt
-        # Chạy script để điền các cấu hình của bạn
-        bash ../$DIY_P2_SH
-        # BẮT BUỘC: Tạo file cấu hình chuẩn dựa trên các tùy chọn trên
-        make defconfig
+#!/bin/bash
+# Đảm bảo xóa sạch cấu hình cũ trước khi ghi mới
+rm -f .config
+
+# Tiếp theo mới là các lệnh echo cấu hình...
+sed -i 's/192.168.1.1/192.168.10.1/g' package/base-files/files/bin/config_generate
+# ... các dòng echo khác ...
