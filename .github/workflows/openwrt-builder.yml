@@ -7,9 +7,7 @@ env:
   REPO_URL: https://github.com/immortalwrt/immortalwrt
   REPO_BRANCH: master
   FEEDS_CONF: feeds.conf.default
-  CONFIG_FILE: .config
   DIY_P2_SH: diy-part2.sh
-  UPLOAD_FIRMWARE: true
   TZ: Asia/Ho_Chi_Minh
 
 jobs:
@@ -41,11 +39,16 @@ jobs:
 
     - name: Load custom configuration
       run: |
-        [ -e $CONFIG_FILE ] && cp $CONFIG_FILE openwrt/.config
+        rm -f openwrt/.config
         chmod +x $DIY_P2_SH
         cd openwrt
         bash ../$DIY_P2_SH
         make defconfig
+
+    - name: SSH Connection (Tạm dừng để kiểm tra)
+      uses: mxschmitt/action-tmate@v3
+      with:
+        limit-access-to-actor: true
 
     - name: Compile firmware
       run: |
