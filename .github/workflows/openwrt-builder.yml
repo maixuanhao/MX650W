@@ -138,3 +138,6 @@ jobs:
       with:
         name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
         path: openwrt/bin/targets/
+        # NẾU CÓ DÒNG NÀY MÀ ĐANG GHI MR33/MX65 THÌ PHẢI ĐỔI THÀNH:
+env:
+  DEVICE_NAME: meraki_mr30h
