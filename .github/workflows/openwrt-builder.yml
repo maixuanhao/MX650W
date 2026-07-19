@@ -67,49 +67,12 @@ jobs:
     - name: Install feeds
       run: cd openwrt && ./scripts/feeds install -a
 
-    - name: Inject Meraki MX65W Hardware Base
-      run: |
-        cd openwrt
-        rm -f .config
-        
-        # 1. Khóa cứng kiến trúc phần cứng Meraki MX65W (IPQ806x)
-        echo "CONFIG_TARGET_ipq806x=y" > .config
-        echo "CONFIG_TARGET_ipq806x_generic=y" >> .config
-        echo "CONFIG_TARGET_ipq806x_generic_DEVICE_meraki_mx65w=y" >> .config
-        
-        # 2. Fix lỗi boot tịt nhân (Division by 0) - Ép driver gốc Non-CT
-        echo "CONFIG_PACKAGE_kmod-ath10k=y" >> .config
-        echo "CONFIG_PACKAGE_ath10k-firmware-qca9984=y" >> .config
-        echo "# CONFIG_PACKAGE_kmod-ath10k-ct is not set" >> .config
-        echo "# CONFIG_PACKAGE_ath10k-firmware-qca9984-ct is not set" >> .config
-        
-        # 3. Định dạng nén GZIP cho U-Boot Meraki
-        echo "CONFIG_TARGET_ROOTFS_SQUASHFS=y" >> .config
-        echo "CONFIG_TARGET_KERNEL_COMP_GZIP=y" >> .config
-
-        # 4. Kích hoạt driver điều khiển 12 cổng mạng (DSA Switch)
-        echo "CONFIG_PACKAGE_kmod-dsa-core=y" >> .config
-        echo "CONFIG_PACKAGE_kmod-dsa-qca8k=y" >> .config
-        echo "CONFIG_PACKAGE_kmod-switch-qca83xx=y" >> .config
-        echo "CONFIG_PACKAGE_kmod-8021q=y" >> .config
-
-        # 5. Kích hoạt lõi điều khiển LED hệ thống
-        echo "CONFIG_PACKAGE_kmod-leds-gpio=y" >> .config
-        echo "CONFIG_PACKAGE_kmod-ledtrig-netdev=y" >> .config
-        echo "CONFIG_PACKAGE_kmod-ledtrig-timer=y" >> .config
-        echo "CONFIG_PACKAGE_kmod-ledtrig-default-on=y" >> .config
-        echo "CONFIG_PACKAGE_kmod-ledtrig-heartbeat=y" >> .config
-
     - name: Load custom configuration & Apps
       run: |
-        # Đưa cấu hình file gốc (.config nếu có) vào trước
-        [ -e $CONFIG_FILE ] && cat $CONFIG_FILE >> openwrt/.config
+        [ -e $CONFIG_FILE ] && cat $CONFIG_FILE > openwrt/.config
         chmod +x $DIY_P2_SH
         cd openwrt
-        # Chạy script diy-part2 để nạp đống App và xử lý LED
         $GITHUB_WORKSPACE/$DIY_P2_SH
-        
-        # Đồng bộ hóa và cấu hình lại toàn bộ tùy chọn app
         make defconfig
 
     - name: Setup custom files
@@ -138,6 +101,3 @@ jobs:
       with:
         name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
         path: openwrt/bin/targets/
-        # NẾU CÓ DÒNG NÀY MÀ ĐANG GHI MR33/MX65 THÌ PHẢI ĐỔI THÀNH:
-env:
-  DEVICE_NAME: meraki_mr30h
