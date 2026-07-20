@@ -9,7 +9,7 @@ jobs:
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Initialization environment
       env:
@@ -17,7 +17,7 @@ jobs:
       run: |
         sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
         sudo -E apt-get -qq update
-        sudo -E apt-get -qq install build-essential clang flex bison gasm awk gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev
+        sudo -E apt-get -qq install build-essential clang flex bison gawk gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
 
@@ -44,6 +44,18 @@ jobs:
         make download -j$(nproc)
         find dl -size -1024c -exec rm -f {} \;
 
+    - name: Set Default Theme to Argon
+      run: |
+        mkdir -p openwrt/files/etc/uci-defaults
+        cat << 'EOF' > openwrt/files/etc/uci-defaults/99-argon-theme
+        #!/bin/sh
+        uci set luci.main.mediaurlbase='/luci-static/argon'
+        uci set luci.main.lang='vi'
+        uci commit luci
+        exit 0
+        EOF
+        chmod +x openwrt/files/etc/uci-defaults/99-argon-theme
+
     - name: Compile Firmware
       run: |
         cd openwrt
@@ -51,7 +63,10 @@ jobs:
         make -j$(nproc) || make -j1 || make -j1 V=s
 
     - name: Upload Firmware Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: OpenWrt_Meraki_MX65W
-        path: openwrt/bin/targets/bcm53xx/generic/*
+        path: |
+          openwrt/bin/targets/bcm53xx/generic/*.bin
+          openwrt/bin/targets/bcm53xx/generic/*.manifest
+        if-no-files-found: warn
